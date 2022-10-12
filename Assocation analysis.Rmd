@@ -1,0 +1,361 @@
+---
+title: "Homework-09"
+author: "Vijay K. Gurbani, Ph.D., Illinois Institute of Technology"
+output:
+  html_notebook:
+    toc: yes
+    toc_float: yes
+  html_document:
+    toc: yes
+    df_print: paged
+editor_options: 
+  chunk_output_type: inline
+---
+
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+rm(list=ls())
+directory <- getwd()
+setwd(directory)
+```
+
+### Part 2.1-A
+
+```{r}
+df <- list()
+name <- c("tr-1k.csv","tr-5k.csv","tr-20k.csv","tr-75k.csv")
+for(i in 1:4){
+  df[[i]] <- read.csv(name[i], header=FALSE, fill = TRUE, col.names = c("ID","P1","P2","P3","P4","P5","P6","P7","P8"))
+}
+df.products <- read.csv("products.csv", header = FALSE,col.names = c("ProductID","Productname"))
+dim(df[[2]])
+```
+
+```{r}
+new <- list()
+num <- c(1000, 5000, 20000, 75000)
+for (i in 1:4){
+  new[[i]] <- data.frame("ID"=1:num[i])
+}
+dim(new[[3]])
+```
+
+```{r}
+for (i in 1:4){
+  for (j in 1:ncol(df[[i]])){
+    product <- df.products$Productname[match(df[[i]][,j], df.products$ProductID)]
+    new[[i]] <- cbind(new[[i]], product)
+  }
+  new[[i]] <-new[[i]][,-1]
+}
+dim(new[[1]])
+```
+
+```{r}
+for (i in 1:4){
+  new[[i]] <- new[[i]][, -1]
+}
+```
+
+```{r}
+name_new <- c("tr-1k-canonical.csv", "tr-5k-canonical.csv",
+              "tr-20k-canonical.csv", "tr-75k-canonical.csv")
+for (i in 1:4){
+  write.table(new[[i]], file=name_new[i], sep =',',row.names = FALSE, col.names = FALSE, na='')
+}
+```
+
+### Part 2.1-B
+
+```{r}
+library("arules")
+library("arulesViz")
+```
+
+```{r}
+trans <- read.transactions("tr-1k-canonical.csv", sep=",",header = FALSE)
+summary(trans)
+```
+
+```{r}
+inspect(trans[1:5])
+```
+
+```{r}
+freq.itemset <- apriori(trans, parameter=list(support=0.1, target="frequent itemsets"))
+```
+
+```{r}
+inspect(sort(freq.itemset, decreasing = T, by="count"))
+rm(freq.itemset)
+```
+
+```{r}
+itemFrequencyPlot(trans, support = 0.1)
+image(trans)
+```
+
+
+
+
+
+
+```{r}
+rules <- apriori(trans)
+rm(rules)
+```
+
+```{r}
+freq.itset <- apriori(trans, parameter=list(support=0.01, target="frequent itemsets"))
+inspect(sort(freq.itset, decreasing = T, by="count"))
+rm(freq.itset)
+itemFrequencyPlot(trans, support = 0.01)
+image(trans)
+```
+
+
+```{r}
+rules <- apriori(trans, parameter = list(support=0.01, conf=0.5))
+summary(rules)
+```
+
+```{r}
+inspect(head(rules, by="confidence"))
+```
+
+```{r}
+rules_support <- sort(rules, by="support")
+rules_lift <- sort(rules, by="lift")
+```
+
+```{r}
+inspect(head(rules_support,3))
+```
+
+```{r}
+new.rules <- rules[!duplicated(generatingItemsets(rules))]
+rules_support_new <- sort(new.rules, by="support")
+rules_lift_new <- sort(new.rules, by="lift")
+rules_confi_new <- sort(new.rules, by="confidence")
+```
+
+```{r}
+inspect(head(rules_support_new,3))
+```
+
+```{r}
+inspect(head(rules_confi_new,10))
+```
+
+```{r}
+plot(new.rules, engine="htmlwidget")
+```
+
+```{r}
+cat("The top 3 items selected are those which have highest support level:", "\n")
+cat("{Truffle Cake} => {Gongolais Cookie}", "\n")
+cat("{Marzipan Cookie} => {Truile Cookie}", "\n")
+cat("{Strawberry Cake} => {Napoleon Cake}", "\n")
+```
+
+
+```{r}
+cat("The top 3 items selected are those which have highest confidence level:", "\n")
+cat("{Apple Danish, Apple Tart} => {Apple Croissant}", "\n")
+cat("{Apricot Danish, Opera Cake} => {Cherry Tart}", "\n")
+cat("{Apple Danish, Apple Tart, Cherry Soda} => {Apple Croissant}", "\n")
+```
+
+```{r}
+cat("Rule 7 with support of 0.31","\n")
+cat("{Apple Danish, Apple Tart, Cherry Soda} => {Apple Croissant}", "\n", "\n")
+cat("Rule 9 with support of 0.40","\n")
+cat("{Apple Danish, Apple Tart} => {Apple Croissant}", "\n")
+```
+
+
+```{r}
+trans.list <- list()
+trans.name <- c("tr-1k-canonical.csv", "tr-5k-canonical.csv",
+                "tr-20k-canonical.csv", "tr-75k-canonical.csv")
+for (i in 1:4){
+  trans.list[[i]] <- read.transactions(trans.name[i], sep=",",header = FALSE)
+}
+```
+
+## 1000 dataset ##
+```{r}
+freq_itemset_1k <- apriori(trans.list[[1]], parameter=list(support=0.1, target="frequent itemsets"))
+inspect(sort(freq_itemset_1k, decreasing = T, by="count"))
+rm(freq_itemset_1k)
+itemFrequencyPlot(trans.list[[1]], support = 0.1)
+image(trans.list[[1]])
+```
+These results are the similar to the one obtained in previous section for the 1000 dataset.
+
+## 5000 dataset ##
+```{r}
+freq_itemset_5k <- apriori(trans.list[[2]], parameter=list(support=0.1, target="frequent itemsets"))
+inspect(sort(freq_itemset_5k, decreasing = T, by="count"))
+rm(freq_itemset_5k)
+itemFrequencyPlot(trans.list[[2]], support = 0.1)
+image(trans.list[[2]])
+```
+These results for the 5000 dataset for the same minsup vlue of 0.1 the total number of itemsets is lower than the 1000 dataset.
+
+## 20000 dataset ##
+
+```{r}
+freq_itemset_20k <- apriori(trans.list[[3]], parameter=list(support=0.1, target="frequent itemsets"))
+inspect(sort(freq_itemset_20k, decreasing = T, by="count"))
+rm(freq_itemset_20k)
+itemFrequencyPlot(trans.list[[3]], support = 0.1)
+image(trans.list[[3]])
+```
+These results for the 20000 dataset is similar to the 5000 dataset.
+
+## 75000 dataset ##
+
+```{r}
+freq_itemset_75k <- apriori(trans.list[[4]], parameter=list(support=0.1, target="frequent itemsets"))
+inspect(sort(freq_itemset_75k, decreasing = T, by="count"))
+rm(freq_itemset_75k)
+itemFrequencyPlot(trans.list[[4]], support = 0.1)
+image(trans.list[[4]])
+```
+
+These results for the 75000 dataset is more than the 5000 and the 20000 dataset witht the exception of Tuile Cookie.
+
+#### Minsup value
+
+There is a change in the frequent items from the 1000 dataset and high quantity of types of Coffee from the 5000 dataset.The number of these frequent items is increased in each dataset. Thus customers continue to buy coffee till the 75000 datatset and the the Tuile Cookie is another frequent item.
+
+
+- Gongolais Cookie
+- Truffle Cake 
+- Tuile Cookie
+
+To the most frequent items:
+
+-Coffee Eclair
+-Hot Coffee
+
+#### Output for each rule.
+
+# We try to create new rules using the minsup value to 0.01.
+
+## 1000 DATASET## 
+
+```{r}
+rules.1k <- apriori(trans.list[[1]], parameter = list(support=0.01, conf=0.5))
+new.rules.1k <- rules.1k[!duplicated(generatingItemsets(rules.1k))]
+summary(new.rules.1k)
+new.rules.1k.sort.support <- sort(new.rules.1k, by="support")
+new.rules.1k.sort.lift <- sort(new.rules.1k, by="lift")
+new.rules.1k.sort.confi <- sort(new.rules.1k, by="confidence")
+```
+
+## 5000 DATASET## 
+
+```{r}
+rules.5k <- apriori(trans.list[[2]], parameter = list(support=0.01, conf=0.5))
+new.rules.5k <- rules.5k[!duplicated(generatingItemsets(rules.5k))]
+summary(new.rules.5k)
+new.rules.5k.sort.support <- sort(new.rules.5k, by="support")
+new.rules.5k.sort.lift <- sort(new.rules.5k, by="lift")
+new.rules.5k.sort.confi <- sort(new.rules.5k, by="confidence")
+```
+
+## 20000 DATASET## 
+
+```{r}
+rules.20k <- apriori(trans.list[[3]], parameter = list(support=0.01, conf=0.5))
+new.rules.20k <- rules.20k[!duplicated(generatingItemsets(rules.20k))]
+summary(new.rules.20k)
+new.rules.20k.sort.support <- sort(new.rules.20k, by="support")
+new.rules.20k.sort.lift <- sort(new.rules.20k, by="lift")
+new.rules.20k.sort.confi <- sort(new.rules.20k, by="confidence")
+```
+
+## 75000 DATASET## 
+
+```{r}
+rules.75k <- apriori(trans.list[[4]], parameter = list(support=0.01, conf=0.5))
+# Removing the duplicated rules
+new.rules.75k <- rules.75k[!duplicated(generatingItemsets(rules.75k))]
+summary(new.rules.75k)
+new.rules.75k.sort.support <- sort(new.rules.75k, by="support")
+new.rules.75k.sort.lift <- sort(new.rules.75k, by="lift")
+new.rules.75k.sort.confi <- sort(new.rules.75k, by="confidence")
+```
+
+#### Graph for new rules.
+
+```{r}
+plot(new.rules.1k, engine="htmlwidget")
+plot(new.rules.5k, engine="htmlwidget")
+plot(new.rules.20k, engine="htmlwidget")
+plot(new.rules.75k, engine="htmlwidget")
+```
+
+### Part 2.1-c
+
+Results observed are as follows 
+
+The total number of rules hardly varies. The total number of rules for a minsup of 0.01 and a confidence of 0.5 is:
+
+**CONFIDENCE**
+
+In the confidence values the rules are grouped into specific confidence values as the number of transactions increases. 
+
+Thus for the 1000 dataset the rules are widely scattered in different confidence values. And when we look at the 75000 dataset, the rules with highest lift value are grouped in confidence values between 0.9 and 1 and the rules with lowest lift value in confidence values between 0.5 and 0.6. This makes sense as more the transactions are inputed in a dataset, the confidence of the condition of the consequent is complied with the antecedent (or not), tends to a specific value.
+
+**SUPPORT LEVEL**
+
+In the support level, as mentioned above, as the number of transactions increases, the rules are grouped into specific confidence values and then, it is observed that the values with highest lift are grouped in small support values for a higher number of transactions. In case for 1000 dataset, the support values are widely scattered. For 75000 dataset the support values for the highest lift values are grouped between 0.02 and 0.03 and the support values for lowest lift values between 0.04 and 0.05.
+
+### Part 2.1-D
+
+```{r}
+new.rules.75K.sort.support <- sort(new.rules.75k, by="support")
+```
+
+#### (I) Most frequently purchased item or itemset?
+
+The most frequently purchased item or itemset. 
+
+```{r}
+inspect(head(new.rules.75K.sort.support,1))
+```
+```{r}
+cat("{Apricot Danish} => {Cherry Tart}")
+```
+
+#### Least frequently purchased item or itemset?
+
+The least frequently purchased item or item set.
+
+```{r}
+inspect(tail(new.rules.75k.sort.support,1))
+```
+
+```{r}
+cat("{Apple croissant, Apple Danish, Cherry Soda} => {Apple Tart}")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
