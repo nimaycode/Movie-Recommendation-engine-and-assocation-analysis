@@ -1,6 +1,6 @@
 ---
-title: "Homework-09_Extra Credit"
-author: "Vijay K. Gurbani, Ph.D., Illinois Institute of Technology"
+title: "Movie recommendation engine"
+author: "Nimay Srinivasan"
 output:
   html_notebook:
     toc: yes
@@ -20,7 +20,7 @@ paste("user", x)
 ```
 
 ```{r}
-setwd("/Users/nimaysrinivasan/CS-422/CS-422 Homework 9/ml-latest-small")
+setwd("/Users/nimaysrinivasan")
 set.seed(100)
 movies <- read.csv("movies.csv", header=T, sep=",")
 sample <- sample(1:nrow(movies), 10)
