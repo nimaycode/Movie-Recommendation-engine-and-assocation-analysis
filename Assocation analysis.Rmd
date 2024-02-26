@@ -1,6 +1,6 @@
 ---
-title: "Homework-09"
-author: "Vijay K. Gurbani, Ph.D., Illinois Institute of Technology"
+title: "Movie Recommendation Engine"
+author: "Nimay Srinivasan"
 output:
   html_notebook:
     toc: yes
