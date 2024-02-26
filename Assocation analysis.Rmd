@@ -1,5 +1,5 @@
 ---
-title: "Movie Recommendation Engine"
+title: "Association Analysis"
 author: "Nimay Srinivasan"
 output:
   html_notebook:
